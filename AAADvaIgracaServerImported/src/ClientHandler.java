@@ -11,6 +11,8 @@ public class ClientHandler implements Runnable {
 
 	Socket socketForCommunication; //we will use it to make input and output streams so we can communicate with client
 	//boolean inGame = false; //000!!!-------!!!000
+	public boolean inGame = false;
+	public Thread gameThread = null;
 	
 	public ClientHandler(Socket socketForCommunication) { //constructor, that's how we get our socket for communication
 		super();
@@ -36,12 +38,16 @@ public class ClientHandler implements Runnable {
 			BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(socketForCommunication.getInputStream()));
 			PrintStream printWriter = new PrintStream(socketForCommunication.getOutputStream());
 			
-			boolean inGame = false;  //000!!!-------!!!000
+			//public boolean inGame = false;  //000!!!-------!!!000
 			String message;
 			while(true) { //server constantly getting messages and responding to them
-				while(inGame) {
+				//while(inGame) {
+				//}
+				while(gameThread != null){
+					//do nothing
 				}
 				message = bufferedReader.readLine();
+				System.out.println("Message is: " + message);
 				switch (message) {
 				case "play": 
 					// 1. you need to check if there is already a room with one player waiting for an opponent
@@ -49,16 +55,40 @@ public class ClientHandler implements Runnable {
 					if(room == null) { //room with one player is not found
 						Room newRoom = new Room();
 						newRoom.addFirstPlayerToRoom(socketForCommunication);
+						newRoom.setFirstPlayerClientHandler(this);
 						ServerMain.roomList.add(newRoom);
 						printWriter.println("waitingForOpponent");
-						inGame = true;
-						
+						//inGame = true;
+						do{
+							
+						}while(gameThread == null);
+						try {
+							gameThread.join();
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						gameThread = null;
 					}else { //room with one player is found
 						printWriter.println("opponentFound");
+						room.setSecondPlayerClientHandler(this);
 						GameplayHandler gameplayHandler = new GameplayHandler(room);//000!!!-------!!!000 //we are passing 'room' as an argument because it has 
-						Thread gamePlayThread = new Thread(gameplayHandler);
-						gamePlayThread.start();
-						inGame = true;
+						//Thread gamePlayThread = new Thread(gameplayHandler);
+						//gameThread = gamePlayThread;
+						//gamePlayThread.start();
+						
+						gameThread = new Thread(gameplayHandler);
+						gameThread.start();
+						//inGame = true;
+						
+						try {
+							//gamePlayThread.join();
+							gameThread.join();
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						gameThread = null;
 						//even this has to be done by looking room id | or not because you will pass the room object
 					}
 					// 2. if there is no such room, you should create one and put player who sent request in that room (you need to make sure you have his socket) (you are in client handler so you have it dummy)
@@ -68,6 +98,7 @@ public class ClientHandler implements Runnable {
 					//keep in mind closing streams and that you are in thread not in main method
 					break;
 				default:
+					System.out.println("This is not good! >>> \""+message+"\"");
 					break;
 				}
 			}

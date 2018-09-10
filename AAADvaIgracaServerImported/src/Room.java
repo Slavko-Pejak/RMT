@@ -7,7 +7,25 @@ public class Room {
 	private Socket socketSecondPlayer;
 	private int playersInRoom;
 	
+	private ClientHandler firstPlayerClientHandler;
+	private ClientHandler secondPlayerClientHandler;
 	
+	public ClientHandler getFirstPlayerClientHandler() {
+		return firstPlayerClientHandler;
+	}
+
+	public void setFirstPlayerClientHandler(ClientHandler firstPlayerClientHandler) {
+		this.firstPlayerClientHandler = firstPlayerClientHandler;
+	}
+
+	public ClientHandler getSecondPlayerClientHandler() {
+		return secondPlayerClientHandler;
+	}
+
+	public void setSecondPlayerClientHandler(ClientHandler secondPlayerClientHandler) {
+		this.secondPlayerClientHandler = secondPlayerClientHandler;
+	}
+
 	//--------<CONSTRUCTOR>----------------
 	public Room() {
 		super();
@@ -63,7 +81,7 @@ public class Room {
 	
 	public String generisiID() { //method that is generating ID, later you need to check if it is unique
         boolean dobarBroj = false;
-        String kod="";
+        String kod = "";
         for(int i=0;i<10;i++) {
             dobarBroj = false; //at beginning 'dobarBroj' is false, but in next iteration it will be true, so we need to set it again to false 
             int broj;

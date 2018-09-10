@@ -16,11 +16,21 @@ public class GameplayHandler implements Runnable {
 		this.gameplayRoom = gameplayRoom;
 		//clientHandler = ch; //000!!!-------!!!000
 	}
+	
+	public static void destroyRoom(Room gameplayRoom){
+		for(int i = 0; i < ServerMain.roomList.size(); i++){
+			if(ServerMain.roomList.get(i).getRoomID().equals(gameplayRoom.getRoomID())){
+				ServerMain.roomList.remove(i);
+			}
+		}
+	}
 
 
 	@Override
 	public void run() {
 		try {
+			gameplayRoom.getFirstPlayerClientHandler().gameThread = Thread.currentThread();
+			
 			//streams for communicating with first player
 			BufferedReader bufferedReaderFirstPlayer = new BufferedReader(new InputStreamReader(gameplayRoom.getSocketFirstPlayer().getInputStream()));
 			PrintStream printWriterFirstPlayer = new PrintStream(gameplayRoom.getSocketFirstPlayer().getOutputStream());
@@ -38,6 +48,8 @@ public class GameplayHandler implements Runnable {
 			String firsPlayerWord = bufferedReaderFirstPlayer.readLine();
 			String secondPlayerWord = bufferedReaderSecondPlayer.readLine();
 			
+			GameplayHandler.destroyRoom(gameplayRoom);  //destroying room after the game
+			
 			if(firsPlayerWord.length() > secondPlayerWord.length()) {
 				printWriterFirstPlayer.println("victory");
 				printWriterSecondPlayer.println("defeat");
@@ -49,12 +61,12 @@ public class GameplayHandler implements Runnable {
 				printWriterSecondPlayer.println("draw");
 			}
 			
+			
 			//clientHandler.inGame = false; //000!!!-------!!!000
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
 	}
 
 }
