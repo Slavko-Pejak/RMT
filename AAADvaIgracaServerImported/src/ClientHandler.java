@@ -10,7 +10,6 @@ import java.net.Socket;
 public class ClientHandler implements Runnable {
 
 	Socket socketForCommunication; //we will use it to make input and output streams so we can communicate with client
-	//boolean inGame = false; //000!!!-------!!!000
 	public boolean inGame = false;
 	public Thread gameThread = null;
 	
@@ -31,6 +30,17 @@ public class ClientHandler implements Runnable {
 		return null;
 	}
 	
+	public static Thread findRoomAndSetThread(Room newRoom){
+		for(int i = 0; i < ServerMain.roomList.size(); i++){
+			if(ServerMain.roomList.get(i).getRoomID().equals(newRoom.getRoomID())){
+				if(ServerMain.roomList.get(i).getFirstPlayerClientHandler().gameThread != null){
+					return ServerMain.roomList.get(i).getFirstPlayerClientHandler().gameThread;
+				}
+			}
+		}
+		return null;
+	}
+	
 	@Override
 	public void run() {  //just like new main that is made just for that one player
 		try {
@@ -38,14 +48,21 @@ public class ClientHandler implements Runnable {
 			BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(socketForCommunication.getInputStream()));
 			PrintStream printWriter = new PrintStream(socketForCommunication.getOutputStream());
 			
-			//public boolean inGame = false;  //000!!!-------!!!000
 			String message;
 			while(true) { //server constantly getting messages and responding to them
-				//while(inGame) {
-				//}
-				while(gameThread != null){
-					//do nothing
+				/*
+				System.out.println("Pre ingame");
+				boolean bla = false;
+				while(inGame) {
+					if(bla == false){
+						System.out.println("ingame");
+						bla = true;
+					}
 				}
+				System.out.println("Posle ingame");
+				*/
+				
+				
 				message = bufferedReader.readLine();
 				System.out.println("Message is: " + message);
 				switch (message) {
@@ -57,38 +74,31 @@ public class ClientHandler implements Runnable {
 						newRoom.addFirstPlayerToRoom(socketForCommunication);
 						newRoom.setFirstPlayerClientHandler(this);
 						ServerMain.roomList.add(newRoom);
+						System.out.println("Room created!");
 						printWriter.println("waitingForOpponent");
-						//inGame = true;
+						
+						boolean smallEnd = false;
 						do{
+							Thread pom = findRoomAndSetThread(newRoom);
+							if(pom != null){
+								smallEnd = true;
+								gameThread = pom;
+							}
+						}while(!smallEnd);
+						
+						System.out.println("Inicijalizovan tred!");
+						while(gameThread.isAlive()){
 							
-						}while(gameThread == null);
-						try {
-							gameThread.join();
-						} catch (InterruptedException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
 						}
-						gameThread = null;
 					}else { //room with one player is found
 						printWriter.println("opponentFound");
 						room.setSecondPlayerClientHandler(this);
 						GameplayHandler gameplayHandler = new GameplayHandler(room);//000!!!-------!!!000 //we are passing 'room' as an argument because it has 
-						//Thread gamePlayThread = new Thread(gameplayHandler);
-						//gameThread = gamePlayThread;
-						//gamePlayThread.start();
-						
 						gameThread = new Thread(gameplayHandler);
 						gameThread.start();
-						//inGame = true;
-						
-						try {
-							//gamePlayThread.join();
-							gameThread.join();
-						} catch (InterruptedException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
+						while(gameThread.isAlive()){
+							//ne radi nista!!
 						}
-						gameThread = null;
 						//even this has to be done by looking room id | or not because you will pass the room object
 					}
 					// 2. if there is no such room, you should create one and put player who sent request in that room (you need to make sure you have his socket) (you are in client handler so you have it dummy)

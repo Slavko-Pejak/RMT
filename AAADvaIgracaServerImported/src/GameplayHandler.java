@@ -8,13 +8,10 @@ import java.io.PrintWriter;
 public class GameplayHandler implements Runnable {
 	
 	private Room gameplayRoom;
-	//public ClientHandler clientHandler; //000!!!-------!!!000
 	
-	
-	public GameplayHandler(Room gameplayRoom/*, ClientHandler ch*/) { //000!!!-------!!!000
+	public GameplayHandler(Room gameplayRoom) { 
 		super();
 		this.gameplayRoom = gameplayRoom;
-		//clientHandler = ch; //000!!!-------!!!000
 	}
 	
 	public static void destroyRoom(Room gameplayRoom){
@@ -24,12 +21,21 @@ public class GameplayHandler implements Runnable {
 			}
 		}
 	}
-
+	
+	//vrv je za brisanje
+	public static void inicialyzeThreadFirstPlayer(Room gameplayRoom, Thread thisThread){
+		for(int i = 0; i < ServerMain.roomList.size(); i++){
+			if(ServerMain.roomList.get(i).getRoomID().equals(gameplayRoom.getRoomID())){
+				ServerMain.roomList.get(i).getFirstPlayerClientHandler().gameThread = thisThread;
+			}
+		}
+	} //novo
 
 	@Override
 	public void run() {
 		try {
-			gameplayRoom.getFirstPlayerClientHandler().gameThread = Thread.currentThread();
+			//gameplayRoom.getFirstPlayerClientHandler().gameThread = gameplayRoom.getSecondPlayerClientHandler().gameThread;
+			inicialyzeThreadFirstPlayer(gameplayRoom, Thread.currentThread()); //novo
 			
 			//streams for communicating with first player
 			BufferedReader bufferedReaderFirstPlayer = new BufferedReader(new InputStreamReader(gameplayRoom.getSocketFirstPlayer().getInputStream()));
@@ -60,9 +66,7 @@ public class GameplayHandler implements Runnable {
 				printWriterFirstPlayer.println("draw");
 				printWriterSecondPlayer.println("draw");
 			}
-			
-			
-			//clientHandler.inGame = false; //000!!!-------!!!000
+			return;
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
