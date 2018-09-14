@@ -21,7 +21,12 @@ public class ClientMain {
 	
 	public static void main(String[] args) {
 		try {
-			Socket socket = new Socket("localhost", 16000);
+			//Socket socket = new Socket("localhost", 16000);
+			//Socket socket = new Socket("89.216.215.184", 16000); //ne radi MOJA
+			//Socket socket = new Socket("192.168.1.94", 16000);
+			//Socket socket = new Socket("fe80::dcd0:2540:eeea:df3%17", 16000);
+			//Socket socket = new Socket("127.0.0.1", 16000);
+			Socket socket = new Socket("89.216.18.149", 16000);
 			Scanner scanner = new Scanner(System.in);
 			Boolean end = false;
 			String input;
@@ -57,6 +62,8 @@ public class ClientMain {
 							printWriter.println(myWord1);
 							String gameResult1 = bufferedReader.readLine();
 							System.out.println("Game result: " + gameResult1);
+							//novo
+							//printWriter.println("krajIgre");
 							break;
 						case "opponentFound": //game can start
 							System.out.println("Game will start soon...");
@@ -81,20 +88,21 @@ public class ClientMain {
 					break; //inner switch end
 					//end of "play"
 				case "end":
+					printWriter.print(input + "\n");
+					bufferedReader.close();
+					printWriter.close();
 					end = true; 
-					break;
+					return;
+					//break;
 				default:
 					System.out.println("Not a valid command!!!");
 					break;
 				}
 			}
-			
-			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
 	}
 //nije bitan broj igraca, vec koji igrac prvi ponovo ukuca play
 //zahtev igraca koji prvi u drugoj partiji ukuca play je ignorisan
