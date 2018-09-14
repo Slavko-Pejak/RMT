@@ -18,6 +18,7 @@ public class GameplayHandler implements Runnable {
 		for(int i = 0; i < ServerMain.roomList.size(); i++){
 			if(ServerMain.roomList.get(i).getRoomID().equals(gameplayRoom.getRoomID())){
 				ServerMain.roomList.remove(i);
+				System.out.println("GamePlayHandler: Soba unistena");
 			}
 		}
 	}
@@ -35,7 +36,7 @@ public class GameplayHandler implements Runnable {
 	public void run() {
 		try {
 			//gameplayRoom.getFirstPlayerClientHandler().gameThread = gameplayRoom.getSecondPlayerClientHandler().gameThread;
-			inicialyzeThreadFirstPlayer(gameplayRoom, Thread.currentThread()); //novo
+			//inicialyzeThreadFirstPlayer(gameplayRoom, Thread.currentThread()); //novo
 			
 			//streams for communicating with first player
 			BufferedReader bufferedReaderFirstPlayer = new BufferedReader(new InputStreamReader(gameplayRoom.getSocketFirstPlayer().getInputStream()));
@@ -48,13 +49,17 @@ public class GameplayHandler implements Runnable {
 			
 			//now the game can begin
 			
+		
 			printWriterFirstPlayer.println("start1");
 			printWriterSecondPlayer.println("start2");
 			
 			String firsPlayerWord = bufferedReaderFirstPlayer.readLine();
 			String secondPlayerWord = bufferedReaderSecondPlayer.readLine();
 			
-			GameplayHandler.destroyRoom(gameplayRoom);  //destroying room after the game
+			System.out.println(firsPlayerWord);
+			System.out.println(secondPlayerWord);
+			
+			//GameplayHandler.destroyRoom(gameplayRoom);  //destroying room after the game
 			
 			if(firsPlayerWord.length() > secondPlayerWord.length()) {
 				printWriterFirstPlayer.println("victory");
@@ -66,6 +71,8 @@ public class GameplayHandler implements Runnable {
 				printWriterFirstPlayer.println("draw");
 				printWriterSecondPlayer.println("draw");
 			}
+			
+			GameplayHandler.destroyRoom(gameplayRoom);  //destroying room after the game
 			return;
 		} catch (IOException e) {
 			// TODO Auto-generated catch block

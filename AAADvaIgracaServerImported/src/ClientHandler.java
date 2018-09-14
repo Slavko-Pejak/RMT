@@ -10,8 +10,19 @@ import java.net.Socket;
 public class ClientHandler implements Runnable {
 
 	Socket socketForCommunication; //we will use it to make input and output streams so we can communicate with client
-	public boolean inGame = false;
+	private boolean inGame = false;
+	
 	public Thread gameThread = null;
+	public String username; //ime igraca
+	
+	
+	public boolean isInGame() {
+		return inGame;
+	}
+
+	public void setInGame(boolean inGame) {
+		this.inGame = inGame;
+	}
 	
 	public ClientHandler(Socket socketForCommunication) { //constructor, that's how we get our socket for communication
 		super();
@@ -41,28 +52,44 @@ public class ClientHandler implements Runnable {
 		return null;
 	}
 	
+	public static void tellFirstPlayerAboutGamesEnd(Room gamePlayRoom){
+		String firstPlayerUserName = gamePlayRoom.getFirstPlayerClientHandler().username;
+		System.out.println("First player username: " + firstPlayerUserName);
+		for(int i = 0; i < ServerMain.clientHandlerList.size(); i++){
+			if(ServerMain.clientHandlerList.get(i).username.equals(firstPlayerUserName)){
+				ServerMain.clientHandlerList.get(i).setInGame(false);
+				System.out.println("We set in game to false!");
+			}
+		}
+		/*
+		for (ClientHandler ch : ServerMain.clientHandlerList) {
+			if(ch.username.equals(firstPlayerUserName)){
+				ch.inGame = false;
+			}
+		}
+		*/
+	}
+	
+	public static boolean daLiSobaJosUvekPostoji(Room justCreatedRoom){
+		for(int i=0; i < ServerMain.roomList.size(); i++){
+			if(ServerMain.roomList.get(i).getRoomID().equals(justCreatedRoom.getRoomID())){
+				System.out.println(justCreatedRoom.getRoomID());
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	@Override
 	public void run() {  //just like new main that is made just for that one player
 		try {
 			
 			BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(socketForCommunication.getInputStream()));
 			PrintStream printWriter = new PrintStream(socketForCommunication.getOutputStream());
-			
+			System.out.println(username);
 			String message;
-			while(true) { //server constantly getting messages and responding to them
-				/*
-				System.out.println("Pre ingame");
-				boolean bla = false;
-				while(inGame) {
-					if(bla == false){
-						System.out.println("ingame");
-						bla = true;
-					}
-				}
-				System.out.println("Posle ingame");
-				*/
-				
-				
+			boolean end = false;
+			while(!end) { //server constantly getting messages and responding to them
 				message = bufferedReader.readLine();
 				System.out.println("Message is: " + message);
 				switch (message) {
@@ -71,39 +98,47 @@ public class ClientHandler implements Runnable {
 					Room room = checkingForAnExistingRoom(); // 1. is done here
 					if(room == null) { //room with one player is not found
 						Room newRoom = new Room();
+						System.out.println(newRoom.getRoomID());
 						newRoom.addFirstPlayerToRoom(socketForCommunication);
 						newRoom.setFirstPlayerClientHandler(this);
 						ServerMain.roomList.add(newRoom);
 						System.out.println("Room created!");
 						printWriter.println("waitingForOpponent");
+						//novo
+						//String porukaOKrajuPartije  = bufferedReader.readLine();
+						//System.out.println(porukaOKrajuPartije);
 						
-						boolean smallEnd = false;
-						do{
-							Thread pom = findRoomAndSetThread(newRoom);
-							if(pom != null){
-								smallEnd = true;
-								gameThread = pom;
+						//provera da li soba postoji
+						System.out.println("Soba postoji");
+						boolean ok = true;
+						while(ok){
+							if(daLiSobaJosUvekPostoji(newRoom) == false){
+								ok = false;
 							}
-						}while(!smallEnd);
-						
-						System.out.println("Inicijalizovan tred!");
-						while(gameThread.isAlive()){
-							
 						}
+						System.out.println("Soba je unistena, kraj partije!");
 					}else { //room with one player is found
 						printWriter.println("opponentFound");
 						room.setSecondPlayerClientHandler(this);
 						GameplayHandler gameplayHandler = new GameplayHandler(room);//000!!!-------!!!000 //we are passing 'room' as an argument because it has 
 						gameThread = new Thread(gameplayHandler);
 						gameThread.start();
+						System.out.println("Pre isAlive!");
 						while(gameThread.isAlive()){
 							//ne radi nista!!
 						}
+						System.out.println("Posle isAlive!");
+						//obavesti prvog igraca
+						//tellFirstPlayerAboutGamesEnd(room);
 						//even this has to be done by looking room id | or not because you will pass the room object
 					}
 					// 2. if there is no such room, you should create one and put player who sent request in that room (you need to make sure you have his socket) (you are in client handler so you have it dummy)
 					break;
 				case "end":
+					System.out.println("END");
+					bufferedReader.close();
+					printWriter.close();
+					end = true;
 					//think of something
 					//keep in mind closing streams and that you are in thread not in main method
 					break;
